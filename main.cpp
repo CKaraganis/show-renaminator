@@ -20,13 +20,13 @@ int main()
 
 	std::cout << "Found " << shows.size() << " shows.\n";
 	
-	for (auto sh : shows)
+	for (auto& sh : shows)
 	{
 		std::cout << sh.old_path.filename() << " (" << sh.seasons.size() << "): " << sh.old_path << '\n';
-		for (auto se : sh.seasons)
+		for (auto& se : sh.seasons)
 		{
 			std::cout << "\tSeason " << se.get_season_number() << " (" << se.episodes.size() << "): " << se.old_path << '\n';
-			for (auto ep : se.episodes)
+			for (auto& ep : se.episodes)
 			{
 				std::cout << "\t\tEpisode " << ep.get_episode_number() << ": " << ep.old_path << '\n';
 			}

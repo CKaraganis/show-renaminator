@@ -32,21 +32,19 @@ int file_getter::Season::get_season_number() {
 	return std::stoi(sub);
 }
 
-std::vector<file_getter::Show> file_getter::get_shows(std::filesystem::path working_directory)
+void discover_shows(std::filesystem::directory_iterator& show_subdirectories, std::vector<file_getter::Show>& shows)
 {
-	auto show_subdirectories = std::filesystem::directory_iterator(working_directory);
-	std::vector<file_getter::Show> shows{};
-
-	for (auto show_sub : show_subdirectories)
+	for (auto& show_sub : show_subdirectories)
 	{
 		if (!std::filesystem::is_directory(show_sub) || std::filesystem::is_empty(show_sub))
 			continue;
 
 		file_getter::Show show{};
+		show.old_path = show_sub;
 
 		auto season_subdirectories = std::filesystem::directory_iterator(show_sub);
 
-		for (auto season_sub : season_subdirectories)
+		for (auto& season_sub : season_subdirectories)
 		{
 			if (!std::filesystem::is_directory(season_sub) || std::filesystem::is_empty(season_sub) || !season_sub.path().filename().string().contains("Season"))
 				continue;
@@ -56,13 +54,20 @@ std::vector<file_getter::Show> file_getter::get_shows(std::filesystem::path work
 			auto episodes = std::filesystem::directory_iterator(season_sub);
 			season.old_path = season_sub.path();
 
-			for (auto episode : episodes)
+			for (auto& episode : episodes)
 			{
 				if (std::filesystem::is_directory(episode))
 					continue;
 
 				file_getter::Episode ep;
 				ep.old_path = episode.path();
+				auto episode_number = ep.get_episode_number();
+
+				auto existing = find_if(season.episodes.begin(), season.episodes.end(), [episode_number](file_getter::Episode e) {
+					return e.get_episode_number() == episode_number;
+					});
+				if (existing != season.episodes.end())
+					continue;
 
 				season.episodes.push_back(ep);
 			}
@@ -73,6 +78,14 @@ std::vector<file_getter::Show> file_getter::get_shows(std::filesystem::path work
 
 		shows.push_back(show);
 	}
+}
+
+std::vector<file_getter::Show> file_getter::get_shows(std::filesystem::path working_directory)
+{
+	auto show_subdirectories = std::filesystem::directory_iterator(working_directory);
+	std::vector<file_getter::Show> shows{};
+
+	discover_shows(show_subdirectories, shows);
 
 	return shows;
 }
