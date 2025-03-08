@@ -1,5 +1,6 @@
 #include "input_getter.h"
 #include "file_getter.h"
+#include "file_copier.h"
 #include <vector>
 
 int main()
@@ -16,22 +17,15 @@ int main()
 		return -2;
 	}
 
-	auto shows = file_getter::get_shows(working_directory.value());
+	auto shows = file::get_shows(working_directory.value(), output_directory.value());
 
-	std::cout << "Found " << shows.size() << " shows.\n";
-	
-	for (auto& sh : shows)
+	if (shows.empty())
 	{
-		std::cout << sh.old_path.filename() << " (" << sh.seasons.size() << "): " << sh.old_path << '\n';
-		for (auto& se : sh.seasons)
-		{
-			std::cout << "\tSeason " << se.get_season_number() << " (" << se.episodes.size() << "): " << se.old_path << '\n';
-			for (auto& ep : se.episodes)
-			{
-				std::cout << "\t\tEpisode " << ep.get_episode_number() << ": " << ep.old_path << '\n';
-			}
-		}
+		std::cout << "No Shows found at " << working_directory.value().string() << '\n';
+		return -1;
 	}
+
+	file::create_copies(shows);
 
 	return 0;
 }

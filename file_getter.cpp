@@ -1,46 +1,18 @@
 #include "file_getter.h"
+#include "show.h"
 
-
-int file_getter::Episode::get_group_number() {
-	std::string str = old_path.filename().string();
-	int first_hyphen_index = str.find_first_of('-');
-	std::string sub = str.substr(0, first_hyphen_index);
-	return std::stoi(sub);
-}
-
-int file_getter::Episode::get_group_index() {
-	std::string delimter = "Title ";
-	std::string str = old_path.filename().string();
-	int start_index = str.find_first_of(delimter) + delimter.length() + 1;
-	int end_index = str.find(".mp4");
-	std::string sub = str.substr(start_index, end_index - start_index);
-	return std::stoi(sub);
-}
-
-int file_getter::Episode::get_episode_number() {
-	int group_number = get_group_number();
-	int group_index = get_group_index();
-	return group_number + group_index - 1;
-}
-
-int file_getter::Season::get_season_number() {
-	std::string str = old_path.filename().string();
-	std::string delimter = "Season ";
-	int start_index = str.find_first_of(delimter) + delimter.length();
-	int len = str.length();
-	std::string sub = str.substr(start_index, len - start_index + 1);
-	return std::stoi(sub);
-}
-
-void discover_shows(std::filesystem::directory_iterator& show_subdirectories, std::vector<file_getter::Show>& shows)
+std::vector<show::Show> file::get_shows(std::filesystem::path& working_directory, std::filesystem::path& output_directory)
 {
-	for (auto& show_sub : show_subdirectories)
+	auto show_subdirectories = std::filesystem::directory_iterator(working_directory);
+	std::vector<show::Show> shows{};
+
+	for (const std::filesystem::directory_entry& show_sub : show_subdirectories)
 	{
 		if (!std::filesystem::is_directory(show_sub) || std::filesystem::is_empty(show_sub))
 			continue;
 
-		file_getter::Show show{};
-		show.old_path = show_sub;
+		show::Show show{};
+		show.init(show_sub.path(), output_directory);
 
 		auto season_subdirectories = std::filesystem::directory_iterator(show_sub);
 
@@ -49,21 +21,21 @@ void discover_shows(std::filesystem::directory_iterator& show_subdirectories, st
 			if (!std::filesystem::is_directory(season_sub) || std::filesystem::is_empty(season_sub) || !season_sub.path().filename().string().contains("Season"))
 				continue;
 
-			file_getter::Season season{};
+			show::Season season{};
 
 			auto episodes = std::filesystem::directory_iterator(season_sub);
-			season.old_path = season_sub.path();
+			season.init(season_sub.path(), show.get_new_path());
 
 			for (auto& episode : episodes)
 			{
 				if (std::filesystem::is_directory(episode))
 					continue;
 
-				file_getter::Episode ep;
-				ep.old_path = episode.path();
+				show::Episode ep;
+				ep.init(episode.path(), season.get_new_path(), show.get_show_name(), season.get_season_number());
 				auto episode_number = ep.get_episode_number();
 
-				auto existing = find_if(season.episodes.begin(), season.episodes.end(), [episode_number](file_getter::Episode e) {
+				auto existing = find_if(season.episodes.begin(), season.episodes.end(), [episode_number](show::Episode e) {
 					return e.get_episode_number() == episode_number;
 					});
 				if (existing != season.episodes.end())
@@ -78,14 +50,6 @@ void discover_shows(std::filesystem::directory_iterator& show_subdirectories, st
 
 		shows.push_back(show);
 	}
-}
-
-std::vector<file_getter::Show> file_getter::get_shows(std::filesystem::path working_directory)
-{
-	auto show_subdirectories = std::filesystem::directory_iterator(working_directory);
-	std::vector<file_getter::Show> shows{};
-
-	discover_shows(show_subdirectories, shows);
 
 	return shows;
 }

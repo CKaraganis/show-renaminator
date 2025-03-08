@@ -119,6 +119,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp23</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -128,11 +129,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="show.cpp" />
+    <ClCompile Include="show.h" />
+    <ClCompile Include="file_copier.cpp" />
     <ClCompile Include="file_getter.cpp" />
     <ClCompile Include="input_getter.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="file_copier.h" />
     <ClInclude Include="file_getter.h" />
     <ClInclude Include="input_getter.h" />
   </ItemGroup>

@@ -1,6 +1,6 @@
 #include "input_getter.h"
 
-void clear_istream(std::istream& input_stream)
+static void clear_istream(std::istream& input_stream)
 {
 	input_stream.clear();
 	input_stream.ignore();
@@ -42,7 +42,6 @@ std::expected<std::filesystem::path, std::string> input_getter::get_output_direc
 	std::string input{};
 
 	output_stream << "Enter your target directory (it will be created if it doesn't exist) >> ";
-	clear_istream(input_stream);
 	getline(input_stream, input, '\n');
 	path = input;
 
@@ -67,9 +66,10 @@ std::expected<std::filesystem::path, std::string> input_getter::get_output_direc
 		}
 		catch (std::exception ex)
 		{
-			std::ostringstream oss{};
-			oss << "Failed to create the output directory: " << ex.what();
-			return std::unexpected(oss.str());
+			const std::string msgBase = "Failed to create the output directory: ";
+			std::string msg = msgBase + ex.what();
+
+			return std::unexpected(msg);
 		}
 	}
 
